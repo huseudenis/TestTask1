@@ -8,7 +8,7 @@ namespace ConsoleApp1
         {
             int columnLength = Intro();
             
-            int[,] field = DrawField((columnLength + 2), (int)(columnLength * 1.5 + 2));
+            int[,] field = DrawField((columnLength), (int)(columnLength * 1.5));
             GamePlay(field);
         }
 
@@ -16,36 +16,14 @@ namespace ConsoleApp1
         {
             int[,] field = new int[rowLength, columnLength];
 
-            int rowCount = 1;
-            int columnCount = 1;
-
-            for (int i = 0; i < rowLength; i++)
+            for(int i = 0; i < field.GetUpperBound(0); i++)
             {
-                for (int j = 0; j < columnLength - 1; j++)
+                for(int j = 0; j < field.GetUpperBound(1); j++)
                 {
-                    if(j == 0)
-                    {
-                        if (i < rowLength - 2)
-                        {
-                            field[i, j] = columnCount;
-                            columnCount++;
-                        }
-                    }
-                    else if (i == rowLength-1)
-                    {
-                        field[i, j] = rowCount;
-                        rowCount++;
-                    }
-                    else if(i == rowLength - 2)
-                    {
-
-                    }
-                    else
-                    {
-                        field[i, j] = 0;
-                    }
+                    field[i, j] = 0;
                 }
             }
+            
 
             ShowField(field);
 
@@ -136,37 +114,43 @@ namespace ConsoleApp1
             int rowLength = field.GetUpperBound(0);
             int columnLength = field.GetUpperBound(1);
 
-            for (int i = 0; i < rowLength; i++)
+            int rowCount = 1;
+            int columnCount = 1;
+
+            for (int i = 0; i <= rowLength; i++)
             {
-                for (int j = 0; j < columnLength - 1; j++)
+                for (int j = 0; j <= columnLength; j++)
                 {
-                    if (j == 0)
+                    if(j == 0)
                     {
-                        if (i >= rowLength - 2)
-                        {
-                            Console.Write("   ");
-                        }
-                        else
-                        {
-                            Console.Write("{0,2}|", field[i, j]);
-                        }
-                    }
-                    else if (i == rowLength - 1)
-                    {
+                        Console.Write("{0,3}|", rowCount);
+                        rowCount++;
                         Console.Write("{0,3}", field[i, j]);
                     }
-                    else if (i == rowLength - 2)
-                    {
-                        Console.Write("---");
-                    }
-                    else
-                    {
-                        Console.Write("{0,3}", field[i, j]);
-                    }
+                    
+                    Console.Write("{0,3}", field[i, j]);
                 }
 
                 Console.WriteLine();
             }
+
+            Console.Write("---|");
+
+            for (int i = 0; i <= columnLength + 1; i++)
+            {
+                Console.Write("---");
+            }
+
+            Console.WriteLine();
+
+            Console.Write("   |");
+
+            for (int i = 0; i <= columnLength + 1; i++)
+            {
+                Console.Write("{0,3}", i);
+            }
+
+            Console.WriteLine();
         }
 
         static void FieldChanger(int[,] currentField, int[,] userFigure, int userXCoordinate, int userYCoordinate)
