@@ -6,10 +6,16 @@ namespace ConsoleApp1
     {
         static void Main()
         {
-            int columnLength = Intro();
+            int columnLength = Intro(out int numberOfTurns);
             
             int[,] field = DrawField((columnLength), (int)(columnLength * 1.5));
-            GamePlay(field);
+            int[,] currentField = GamePlay(field, numberOfTurns);
+
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine(CheckForWinner(currentField));
+            Console.ResetColor();
+            Console.ReadKey();
+
         }
 
         static int[,] DrawField(int rowLength, int columnLength)
@@ -30,7 +36,7 @@ namespace ConsoleApp1
             return field;
         }
 
-        static int Intro()
+        static int Intro(out int numberOfTurns)
         {
             int columnLength;
 
@@ -49,32 +55,34 @@ namespace ConsoleApp1
             }
 
             Console.WriteLine();
+
+            numberOfTurns = 2;//(20 * columnLength) / 20;
             return columnLength;
         }
 
-        static void GamePlay(int[,] field)
+        static int[,] GamePlay(int[,] field, int numberOfTurns)
         {
             int columnLength = field.GetUpperBound(0);
             int rowLength = field.GetUpperBound(1);
             int currentUserNumber = 1;
+            int[,] currentField;
             do
             {
-                Console.WriteLine($"{(currentUserNumber == 1 ? "Первый" : "Второй")} игрок ходит");
+                Console.WriteLine($"{(currentUserNumber == 1 ? "Первый" : "Второй")} игрок ходит ({numberOfTurns} ходов осталось)");
                 Console.WriteLine("Нажмине любую клавишу для броска кубиков");
 
                 Console.ReadKey();
 
                 var rand = new Random();
 
-                int firstDiceNumber = 4;// rand.Next(1, 7);
-                int secondDiceNumber = 2;// rand.Next(1, 7);
+                int firstDiceNumber = rand.Next(1, 7);
+                int secondDiceNumber = rand.Next(1, 7);
 
-                int[,] userFigure = new int[firstDiceNumber, secondDiceNumber];
+                int[,] userFigure = new int[secondDiceNumber, firstDiceNumber];
 
                 int playerXCoordinate;
                 int playerYCoordinate;
                 int x;
-                
 
                 Console.WriteLine($"Ширина Вашей фигуры: {firstDiceNumber}\n" +
                     $"Высота Вашей фигуры: {secondDiceNumber}");
@@ -133,22 +141,22 @@ namespace ConsoleApp1
                     if (checkFigureInterception)
                     {
                         Console.WriteLine($"{interceptionWarningMessage}");
+                        continue;
                     }
 
 
                 }
-                while (checkBorderInterception && checkFigureInterception);
-                
+                while (checkBorderInterception || checkFigureInterception);
 
-                int[,] currentField = FieldChanger(field, userFigure, playerXCoordinate, playerYCoordinate, currentUserNumber);
-
-                
+                currentField = FieldChanger(field, userFigure, playerXCoordinate, playerYCoordinate, currentUserNumber);
 
                 ShowField(currentField);
+                if (currentUserNumber == -1) numberOfTurns -= 1;
                 currentUserNumber *= -1; 
             }
-            while (true);
+            while (numberOfTurns > 0);
 
+            return currentField;
         }
 
         static void ShowField(int[,] field)
@@ -216,8 +224,8 @@ namespace ConsoleApp1
             if (currentUserNumber == 1)
                 fiedlNumberFiller = 1;
 
-            int userFigureMaxRowNumber = userFigure.GetUpperBound(1);
-            int userFigureMaxColumnNumber = userFigure.GetUpperBound(0);
+            int userFigureMaxRowNumber = userFigure.GetUpperBound(0);
+            int userFigureMaxColumnNumber = userFigure.GetUpperBound(1);
 
             for(int i = -1; i < userFigureMaxRowNumber; i++)
             {
@@ -266,6 +274,44 @@ namespace ConsoleApp1
             }
 
             return false;
+        }
+
+        static string CheckForWinner(int[,] field)
+        {
+            int firstPlayerScore = 0;
+            int secondPlayerScore = 0;
+            for (int i = 0; i < field.GetUpperBound(0); i++)
+            {
+                for (int j = 0; j < field.GetUpperBound(1); j++)
+                {
+                    if(field[i, j] == 1)
+                    {
+                        firstPlayerScore++;
+                    }
+                    else if(field[i, j] == 2)
+                    {
+                        secondPlayerScore++;
+                    }
+                }
+            }
+
+            string result;
+            if (firstPlayerScore > secondPlayerScore)
+            {
+                result = "Первый игрок победил";
+            }
+            else if(firstPlayerScore == secondPlayerScore)
+            {
+                result = "Ничья";
+            }
+            else
+            {
+                result = "Второй игрок победил";
+            }
+
+            return result;
+           
+
         }
     }
 }
