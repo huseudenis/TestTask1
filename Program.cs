@@ -55,58 +55,100 @@ namespace ConsoleApp1
         static void GamePlay(int[,] field)
         {
             int columnLength = field.GetUpperBound(0);
-            int rowLength = (int)(columnLength * 1.5); 
-            Console.WriteLine("Нажмине любую клавишу для броска кубиков");
-            
-            Console.ReadKey();
-
-            var rand = new Random();
-
-            int firstDiceNumber = rand.Next(1, 6);
-            int secondDiceNumber = rand.Next(1, 6);
-
-            int[,] userFigure = new int[firstDiceNumber, secondDiceNumber];
-
-            int playerXCoordinate = 0;
-            int playerYCoordinate = 0;
-            int x;
-
-            Console.WriteLine($"Длина Вашей фигуры: {firstDiceNumber}\n" +
-                $"Высота Вашей фигуры: {secondDiceNumber}");
-
-            int coordinateCount = 0;
+            int rowLength = field.GetUpperBound(1);
+            int currentUserNumber = 1;
             do
             {
-                Console.Write($"Введите координату по {(coordinateCount < 1 ? "вертикали" : "горизонтали")}: ");
-                bool done = false;
+                Console.WriteLine($"{(currentUserNumber == 1 ? "Первый" : "Второй")} игрок ходит");
+                Console.WriteLine("Нажмине любую клавишу для броска кубиков");
+
+                Console.ReadKey();
+
+                var rand = new Random();
+
+                int firstDiceNumber = 4;// rand.Next(1, 7);
+                int secondDiceNumber = 2;// rand.Next(1, 7);
+
+                int[,] userFigure = new int[firstDiceNumber, secondDiceNumber];
+
+                int playerXCoordinate;
+                int playerYCoordinate;
+                int x;
+                
+
+                Console.WriteLine($"Ширина Вашей фигуры: {firstDiceNumber}\n" +
+                    $"Высота Вашей фигуры: {secondDiceNumber}");
+
+                int coordinateCount = 1;
+                
+                bool checkBorderInterception;
+                bool checkFigureInterception = true;
                 do
                 {
-                    bool xCoordinateCheckBool = int.TryParse(Console.ReadLine(), out x);
-
-                    if (!xCoordinateCheckBool || x < 0 || x > (coordinateCount < 1 ? columnLength : rowLength))
+                    playerXCoordinate = 0;
+                    playerYCoordinate = 0;
+                    bool coordinateAssignmentDone = false;
+                    do
                     {
-                        Console.Write($"Введите число между 0 и {(coordinateCount < 1 ? columnLength : rowLength)}: ");
+                        Console.Write($"Введите координату по {(coordinateCount == 1 ? "вертикали (Y)" : "горизонтали (X)")}: ");
+                        bool done = false;
+                        do
+                        {
+                            bool xCoordinateCheckBool = int.TryParse(Console.ReadLine(), out x);
+
+                            if (!xCoordinateCheckBool || x < 1 || x > (coordinateCount == 1 ? (columnLength + 1) : (rowLength + 1)))
+                            {
+                                Console.Write($"Введите число между 1 и {(coordinateCount == 1 ? (columnLength + 1) : (rowLength + 1))}: ");
+                                continue;
+                            }
+
+                            if (xCoordinateCheckBool) done = true;
+                        }
+                        while (!done);
+
+                        if (coordinateCount == 1)
+                        {
+                            playerXCoordinate = x;
+                        }
+                        else
+                        {
+                            playerYCoordinate = x;
+                            coordinateAssignmentDone = true;
+                        }
+
+                        coordinateCount *= -1;
+                    }
+                    while (!coordinateAssignmentDone);
+
+                    checkBorderInterception = CheckBorderInterception(field, userFigure, playerXCoordinate, playerYCoordinate, out string message);
+
+                    if (checkBorderInterception)
+                    {
+                        Console.WriteLine($"{message}");
                         continue;
                     }
-                        
-                    if (xCoordinateCheckBool) done = true;
-                }
-                while (!done);
 
-                if(coordinateCount < 1)
-                {
-                    playerYCoordinate = x;
-                }
-                else
-                {
-                    playerXCoordinate = x;
-                }
+                    checkFigureInterception = CheckFigureInterception(field, userFigure, playerXCoordinate, playerYCoordinate, out string interceptionWarningMessage);
 
-                coordinateCount++;
+                    if (checkFigureInterception)
+                    {
+                        Console.WriteLine($"{interceptionWarningMessage}");
+                    }
+
+
+                }
+                while (checkBorderInterception && checkFigureInterception);
+                
+
+                int[,] currentField = FieldChanger(field, userFigure, playerXCoordinate, playerYCoordinate, currentUserNumber);
+
+                
+
+                ShowField(currentField);
+                currentUserNumber *= -1; 
             }
-            while (coordinateCount < 2);
+            while (true);
 
-            FieldChanger(field, userFigure, playerXCoordinate, playerYCoordinate);
         }
 
         static void ShowField(int[,] field)
@@ -115,20 +157,29 @@ namespace ConsoleApp1
             int columnLength = field.GetUpperBound(1);
 
             int rowCount = 1;
-            int columnCount = 1;
+            
 
             for (int i = 0; i <= rowLength; i++)
             {
                 for (int j = 0; j <= columnLength; j++)
                 {
+                    if (field[i, j] == 1) Console.BackgroundColor = ConsoleColor.Green;
+                    if (field[i, j] == 2) Console.BackgroundColor = ConsoleColor.Yellow;
                     if(j == 0)
                     {
+                        Console.ResetColor();
                         Console.Write("{0,3}|", rowCount);
                         rowCount++;
+                        if (field[i, j] == 1) Console.BackgroundColor = ConsoleColor.Green;
+                        if (field[i, j] == 2) Console.BackgroundColor = ConsoleColor.Yellow;
+                        Console.Write("{0,3}", field[i, j]);
+                    }
+                    else
+                    {
                         Console.Write("{0,3}", field[i, j]);
                     }
                     
-                    Console.Write("{0,3}", field[i, j]);
+                    Console.ResetColor();
                 }
 
                 Console.WriteLine();
@@ -136,7 +187,7 @@ namespace ConsoleApp1
 
             Console.Write("---|");
 
-            for (int i = 0; i <= columnLength + 1; i++)
+            for (int i = 0; i <= columnLength; i++)
             {
                 Console.Write("---");
             }
@@ -145,7 +196,7 @@ namespace ConsoleApp1
 
             Console.Write("   |");
 
-            for (int i = 0; i <= columnLength + 1; i++)
+            for (int i = 1; i <= columnLength + 1; i++)
             {
                 Console.Write("{0,3}", i);
             }
@@ -153,23 +204,68 @@ namespace ConsoleApp1
             Console.WriteLine();
         }
 
-        static void FieldChanger(int[,] currentField, int[,] userFigure, int userXCoordinate, int userYCoordinate)
+        static int[,] FieldChanger(int[,] currentField, int[,] userFigure, int userXCoordinate, int userYCoordinate, int currentUserNumber)
         {
             if(currentField is null || userFigure is null)
             {
                 throw new ArgumentNullException(nameof(userFigure));
             }
 
-            int userFigureMaxRowNumber = userFigure.GetUpperBound(0);
-            int userFigureMaxColumnNumber = userFigure.GetUpperBound(1);
+            int fiedlNumberFiller = 2;
 
-            for(int i = 0; i <= userFigureMaxRowNumber; i++)
+            if (currentUserNumber == 1)
+                fiedlNumberFiller = 1;
+
+            int userFigureMaxRowNumber = userFigure.GetUpperBound(1);
+            int userFigureMaxColumnNumber = userFigure.GetUpperBound(0);
+
+            for(int i = -1; i < userFigureMaxRowNumber; i++)
             {
-                for(int j = 0; j <= userFigureMaxColumnNumber; j++)
+                for(int j = -1; j < userFigureMaxColumnNumber; j++)
                 {
-                    currentField[i + userXCoordinate, j + userYCoordinate] = 1;
+                    currentField[i + userXCoordinate, j + userYCoordinate] = fiedlNumberFiller;
                 }
             }
+
+            return currentField;
+        }
+
+        static bool CheckBorderInterception(int[,] currentField, int[,] userFigure, int userXCoordinate, int userYCoordinate, out string message)
+        {
+            message = string.Empty;
+            bool xBorderInterception = currentField.GetUpperBound(0) + 1 < (userFigure.GetUpperBound(0) + userXCoordinate);
+            if (xBorderInterception)
+            {
+                message = "Фигура выхдить за рамки поля по координате Y";
+                return true;
+            }
+                
+            bool yBorderInterception = currentField.GetUpperBound(1) + 1 < (userFigure.GetUpperBound(1) + userYCoordinate);
+            if (yBorderInterception)
+            {
+                message = "Фигура выхдить за рамки поля по координате X";
+                return true;
+            }
+
+            return false;
+        }
+
+        static bool CheckFigureInterception(int[,] currentField, int[,] userFigure, int userYCoordinate, int userXCoordinate, out string message)
+        {
+            message = "Невозможно установить фигуру. Пересечение с другой фигурой";
+
+            for(int i = userYCoordinate - 1; i < (userYCoordinate + userFigure.GetUpperBound(0)); i++)
+            {
+                for(int j = userXCoordinate - 1; j < (userXCoordinate + userFigure.GetUpperBound(1)); j++)
+                {
+                    if(currentField[i,j] != 0)
+                    {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
         }
     }
 }
